@@ -1,0 +1,319 @@
+<div class="app-container">
+  <div class="decorative-moon"></div>
+  <div class="decorative-star star-1">✦</div>
+  <div class="decorative-star star-2">✧</div>
+  <div class="decorative-star star-3">✦</div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-ornament right"></div>
+    <div class="header-content">
+      <h1 class="app-title">
+        <span class="title-icon">☪</span>
+        محوّل التاريخ
+      </h1>
+      <p class="app-subtitle">التحويل بين التقويم الهجري والميلادي</p>
+    </div>
+    <div class="header-ornament left"></div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs-container">
+    <div class="tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'current'"
+        (click)="setActiveTab('current')"
+        id="tab-current">
+        <span class="tab-icon">📅</span>
+        <span class="tab-label">التاريخ الحالي</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'toHijri'"
+        (click)="setActiveTab('toHijri')"
+        id="tab-toHijri">
+        <span class="tab-icon">🌙</span>
+        <span class="tab-label">ميلادي ← هجري</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'toGregorian'"
+        (click)="setActiveTab('toGregorian')"
+        id="tab-toGregorian">
+        <span class="tab-icon">☀️</span>
+        <span class="tab-label">هجري ← ميلادي</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'dateDiff'"
+        (click)="setActiveTab('dateDiff')"
+        id="tab-dateDiff">
+        <span class="tab-icon">➕</span>
+        <span class="tab-label">حاسبة الأيام</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- Error Message -->
+    @if (error()) {
+      <div class="error-message">
+        <span class="error-icon">⚠️</span>
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Loading Overlay -->
+    @if (loading()) {
+      <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>جاري التحميل...</p>
+      </div>
+    }
+
+    <!-- Current Date Tab -->
+    @if (activeTab() === 'current') {
+      <section class="tab-content current-date-section" id="content-current">
+        <div class="date-display-grid">
+          <!-- Hijri Date Card -->
+          <div class="date-card hijri-card">
+            <div class="card-header">
+              <span class="card-icon">🌙</span>
+              <h2>التاريخ الهجري</h2>
+            </div>
+            <div class="card-body">
+              @if (currentDate()) {
+                <div class="date-primary">{{ currentDate()?.hijri }}</div>
+                <div class="date-secondary">{{ currentDate()?.fullHijri }}</div>
+              } @else {
+                <div class="placeholder-text">جاري تحميل التاريخ...</div>
+              }
+            </div>
+            <div class="card-decoration">
+              <svg viewBox="0 0 100 100" class="crescent-moon">
+                <path d="M50 10 A40 40 0 1 1 50 90 A30 30 0 1 0 50 10" fill="currentColor"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Gregorian Date Card -->
+          <div class="date-card gregorian-card">
+            <div class="card-header">
+              <span class="card-icon">☀️</span>
+              <h2>التاريخ الميلادي</h2>
+            </div>
+            <div class="card-body">
+              @if (currentDate()) {
+                <div class="date-primary">{{ currentDate()?.gregorian }}</div>
+                <div class="date-secondary">{{ currentDate()?.fullGregorian }}</div>
+              } @else {
+                <div class="placeholder-text">جاري تحميل التاريخ...</div>
+              }
+            </div>
+            <div class="card-decoration sun-decoration">
+              <svg viewBox="0 0 100 100" class="sun-icon">
+                <circle cx="50" cy="50" r="20" fill="currentColor"/>
+                @for (i of [0, 1, 2, 3, 4, 5, 6, 7]; track i) {
+                  <line
+                    [attr.x1]="50" [attr.y1]="10"
+                    [attr.x2]="50" [attr.y2]="25"
+                    [attr.transform]="'rotate(' + (i * 45) + ' 50 50)'"
+                    stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                }
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <button class="refresh-btn" (click)="loadCurrentDate()" id="btn-refresh">
+          <span class="btn-icon">🔄</span>
+          تحديث التاريخ
+        </button>
+      </section>
+    }
+
+    <!-- To Hijri Tab -->
+    @if (activeTab() === 'toHijri') {
+      <section class="tab-content converter-section" id="content-toHijri">
+        <div class="converter-card">
+          <div class="converter-header">
+            <h2>تحويل من الميلادي إلى الهجري</h2>
+            <p>أدخل التاريخ الميلادي للتحويل</p>
+          </div>
+
+          <div class="input-group">
+            <label for="gregorian-date">التاريخ الميلادي</label>
+            <input
+              type="date"
+              id="gregorian-date"
+              [ngModel]="gregorianInput()"
+              (ngModelChange)="gregorianInput.set($event)"
+              class="date-input">
+          </div>
+
+          <button class="convert-btn" (click)="convertToHijri()" id="btn-convertToHijri">
+            <span class="btn-icon">🌙</span>
+            تحويل إلى الهجري
+          </button>
+
+          @if (hijriResult()) {
+            <div class="result-card">
+              <div class="result-header">
+                <span class="result-icon">✓</span>
+                نتيجة التحويل
+              </div>
+              <div class="result-body">
+                <div class="result-row">
+                  <span class="result-label">التاريخ المختصر:</span>
+                  <span class="result-value">{{ hijriResult()?.hijriShort }}</span>
+                </div>
+                <div class="result-row">
+                  <span class="result-label">التاريخ الكامل:</span>
+                  <span class="result-value full-date">{{ hijriResult()?.hijriLong }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- To Gregorian Tab -->
+    @if (activeTab() === 'toGregorian') {
+      <section class="tab-content converter-section" id="content-toGregorian">
+        <div class="converter-card">
+          <div class="converter-header">
+            <h2>تحويل من الهجري إلى الميلادي</h2>
+            <p>أدخل التاريخ الهجري للتحويل</p>
+          </div>
+
+          <div class="hijri-input-grid">
+            <div class="input-group">
+              <label for="hijri-day">اليوم</label>
+              <input
+                type="number"
+                id="hijri-day"
+                [ngModel]="hijriDay()"
+                (ngModelChange)="hijriDay.set($event)"
+                min="1" max="30"
+                class="number-input">
+            </div>
+
+            <div class="input-group">
+              <label for="hijri-month">الشهر</label>
+              <select
+                id="hijri-month"
+                [ngModel]="hijriMonth()"
+                (ngModelChange)="hijriMonth.set($event)"
+                class="select-input">
+                @for (month of hijriMonths; track month.value) {
+                  <option [value]="month.value">{{ month.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="input-group">
+              <label for="hijri-year">السنة</label>
+              <input
+                type="number"
+                id="hijri-year"
+                [ngModel]="hijriYear()"
+                (ngModelChange)="hijriYear.set($event)"
+                min="1" max="1500"
+                class="number-input">
+            </div>
+          </div>
+
+          <button class="convert-btn gregorian-btn" (click)="convertToGregorian()" id="btn-convertToGregorian">
+            <span class="btn-icon">☀️</span>
+            تحويل إلى الميلادي
+          </button>
+
+          @if (gregorianResult()) {
+            <div class="result-card gregorian-result">
+              <div class="result-header">
+                <span class="result-icon">✓</span>
+                نتيجة التحويل
+              </div>
+              <div class="result-body">
+                <div class="result-row">
+                  <span class="result-label">التاريخ المختصر:</span>
+                  <span class="result-value">{{ gregorianResult()?.gregorianShort }}</span>
+                </div>
+                <div class="result-row">
+                  <span class="result-label">التاريخ الكامل:</span>
+                  <span class="result-value full-date">{{ gregorianResult()?.gregorianLong }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Date Difference Tab -->
+    @if (activeTab() === 'dateDiff') {
+      <section class="tab-content converter-section" id="content-dateDiff">
+        <div class="converter-card">
+          <div class="converter-header">
+            <h2>حاسبة فرق الأيام</h2>
+            <p>أضف أيامًا إلى تاريخ محدد</p>
+          </div>
+
+          <div class="diff-input-grid">
+            <div class="input-group">
+              <label for="diff-date">التاريخ</label>
+              <input
+                type="date"
+                id="diff-date"
+                [ngModel]="diffDate()"
+                (ngModelChange)="diffDate.set($event)"
+                class="date-input">
+            </div>
+
+            <div class="input-group">
+              <label for="diff-days">عدد الأيام</label>
+              <input
+                type="number"
+                id="diff-days"
+                [ngModel]="diffDays()"
+                (ngModelChange)="diffDays.set($event)"
+                class="number-input">
+            </div>
+          </div>
+
+          <button class="convert-btn diff-btn" (click)="calculateDateDiff()" id="btn-calcDiff">
+            <span class="btn-icon">📊</span>
+            حساب التاريخ الجديد
+          </button>
+
+          @if (diffResult()) {
+            <div class="result-card diff-result">
+              <div class="result-header">
+                <span class="result-icon">✓</span>
+                التاريخ بعد {{ diffDays() }} يوم
+              </div>
+              <div class="result-body">
+                <div class="result-row">
+                  <span class="result-label">الميلادي:</span>
+                  <span class="result-value">{{ diffResult()?.date }}</span>
+                </div>
+                <div class="result-row">
+                  <span class="result-label">الهجري:</span>
+                  <span class="result-value">{{ diffResult()?.hijri }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  </main>
+  <footer class="app-footer">
+    <div class="footer-ornament"></div>
+    <p>محوّل التاريخ الهجري والميلادي © ٢٠٢٦</p>
+    <div class="footer-ornament"></div>
+  </footer>
+</div>
